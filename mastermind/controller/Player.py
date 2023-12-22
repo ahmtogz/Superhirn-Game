@@ -5,7 +5,7 @@ from mastermind.controller.InputHandler import InputHandler
 
 
 class Player(IPlayer):
-    def init(self, board_size, role):
+    def __init__(self, board_size, role):
         self.handler = InputHandler()
         self.ROLE = role
         self.board_size = board_size
