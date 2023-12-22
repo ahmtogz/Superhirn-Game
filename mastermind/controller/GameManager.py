@@ -1,10 +1,13 @@
+from abc import ABC, abstractmethod
+from model import Board
+
 class GameManager:
     def __init__(self, ui):
         self.ui = ui
         self.CREATOR = 0
         self.GUESSER = 1
         self.NONE = 2
-        self.currentRound = 0
+        self.currentRound = None
         self.currentTurn = 0
         self.board = None
         self.players = []
@@ -15,19 +18,22 @@ class GameManager:
 
     def start_game(self):
         while True:
-            mode = input("Wähle einen Spielmodus (1 Lokales Spiel vs. Computer, 2 Internetspiel vs. Mensch): ")
+            try:
+                mode = int(input("Wähle einen Spielmodus (1 Lokales Spiel vs. Computer, 2 Internetspiel vs. Mensch): "))
+                if mode == 1:
+                    self.players.append(Player(self.num_slots, self.GUESSER))
+                    self.players.append(Computer(self.CREATOR, self.num_colors, self.num_slots))
+                    self.true_code = self.players[1].createCode
+                    break
+                elif mode == 2:
+                    self.players.append(Player())
+                    self.players.append(Player())
+                    break
+                else:
+                    self.ui.display_message("Ungültige Eingabe. Bitte versuche es erneut.")
+            except ValueError:
+                self.ui.display_message("Ungültige Eingabe. Bitte gib eine Zahl ein.")
 
-            if mode == '1':
-                self.players.append(Player())
-                self.players.append(Computer())
-                self.true_code = Computer.create_code()
-                break
-            elif mode == '2':
-                self.players.append(Player())
-                self.players.append(Player())
-                break
-            else:
-                self.ui.display_message("Ungültige Eingabe. Bitter versuche es erneut.")
         while True:
             try:
                 self.num_colors = int(input("Wähle die Anzahl an Farben (mindestens 2, höchstens 8"))
@@ -47,19 +53,23 @@ class GameManager:
                     self.ui.display_message("Ungültige Eingabe. Bitte gib entweder 4 oder 5 ein.")
             except ValueError:
                 self.ui.display_message("Invalid choice. Bitte gib entweder 4 oder 5 ein.")
-        while self.game_over == false:
+
+        self.board = Board(self.num_slots, self.num_colors, 10)
+
+        while not self.game_over:
             self.start_round()
 
 
     def start_round(self):
         if self.currentRound is None:
             self.currentRound = 1
-        current_guess = input("Bitte gib deinen Rateversuch für Runde " + self.currentRound + " ab: ")
+        current_guess = input(f"Bitte gib deinen Rateversuch für Runde {self.currentRound} ab: ")
         self.check_guess(current_guess = current_guess)
         self.clean_up()
+        self.currentRound += 1
 
     def check_guess(self, current_guess):
-        if len(current_guess) != self.board.get_num_slots():
+        if len(current_guess) != self.num_slots:
             return False
         elif not current_guess.isdigit():
             return False
@@ -100,8 +110,7 @@ class GameManager:
                 self.start_game()
             else:
                 self.ui.display_message("Thanks for playing!")
-                self.game_over = true
-        self.currentRound += 1
+                self.game_over = True
 
     def check_game_over(self):
         if self.currentRound >= self.board.get_num_rounds():
@@ -116,8 +125,7 @@ class GameManager:
                 return self.GUESSER
         return self.NONE
 
-
-class IGameManager:
+class IGameManager(ABC):
     def check_guess(self, current_guess):
         pass
 

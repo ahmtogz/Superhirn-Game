@@ -12,12 +12,12 @@ class Player(IPlayer):
         self.current_guess = [0] * board_size
 
     def create_code(self):
-        return [random.randint(1, 8) for _ in range(4)]
+        return [random.randint(1, 8) for _ in range(self.board_size)]
         # return [0] * self.board_size
 
     def make_guess(self):
         guess = []
-        for i in range(4):
+        for _ in range(self.board_size):
             guess.append(self.handler.get_color())
         return guess
         # for i in range(self.board_size):
