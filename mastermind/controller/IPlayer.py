@@ -11,6 +11,10 @@ class IPlayer(ABC):
         pass
 
     @abstractmethod
-    def receive_current_state(self, board):
+    def receive_feedback(self, guess_with_pins):
         pass
+
+    def get_latest_guess(self):
+        pass
+
 

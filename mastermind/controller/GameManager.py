@@ -1,73 +1,97 @@
 from abc import ABC, abstractmethod
-from model import Board
 
-class GameManager:
-    def __init__(self, ui):
+from mastermind.controller.Computer import Computer
+from mastermind.controller.Evalutor import Evaluator
+from mastermind.controller.IGameManager import IGameManager
+from mastermind.controller.Player import Player
+from mastermind.model.Board import Board
+from mastermind.model.Guess import Guess
+
+
+class GameManager(IGameManager):
+    PLAYER_GUESSER = 0
+    COMPUTER_GUESSER = 1
+
+    CREATOR = 2
+    GUESSER = 3
+    NONE = 4
+
+    def __init__(self, ui, board_size, num_colors, num_rounds):
         self.ui = ui
-        self.CREATOR = 0
-        self.GUESSER = 1
-        self.NONE = 2
-        self.currentRound = None
+
+        self.currentRound = 1
         self.currentTurn = 0
-        self.board = None
-        self.players = []
-        self.num_colors = None
-        self.num_slots = None
+        self.board = Board(board_size, num_colors, num_rounds)
+
+        self.player_guess = None
+
+        self.guessing_role = 0
+
+        self.num_colors = num_colors
+        self.board_size = board_size
         self.game_over = False
         self.true_code = None
 
+        self.evaluator = Evaluator()
+
+
     def start_game(self):
-        while True:
-            try:
-                mode = int(input("Wähle einen Spielmodus (1 Lokales Spiel vs. Computer, 2 Internetspiel vs. Mensch): "))
-                if mode == 1:
-                    self.players.append(Player(self.num_slots, self.GUESSER))
-                    self.players.append(Computer(self.CREATOR, self.num_colors, self.num_slots))
-                    self.true_code = self.players[1].createCode
-                    break
-                elif mode == 2:
-                    self.players.append(Player())
-                    self.players.append(Player())
-                    break
-                else:
-                    self.ui.display_message("Ungültige Eingabe. Bitte versuche es erneut.")
-            except ValueError:
-                self.ui.display_message("Ungültige Eingabe. Bitte gib eine Zahl ein.")
+        self.ui.display_message("1. Kodierer, 2. Rater: ")
+        mode = input()
 
-        while True:
-            try:
-                self.num_colors = int(input("Wähle die Anzahl an Farben (mindestens 2, höchstens 8"))
-                if 1 < self.num_colors < 9:
-                    break
-                else:
-                    self.ui.display_message("Ungültige Eingabe. Bitte gib eine Zahl zwischen 2 und 8 ein.")
-            except ValueError:
-                self.ui.display_message("Ungültige Eingabe. Bitte gib eine Zahl zwischen 2 und 8 ein.")
+        player = Player(self.board_size)
+        computer = Computer(self.num_colors, self.board_size)
 
-        while True:
-            try:
-                self.num_slots = int(input("Wähle die Anzahl der Stellen (4 oder 5): "))
-                if self.num_slots in {4, 5}:
-                    break
-                else:
-                    self.ui.display_message("Ungültige Eingabe. Bitte gib entweder 4 oder 5 ein.")
-            except ValueError:
-                self.ui.display_message("Invalid choice. Bitte gib entweder 4 oder 5 ein.")
+        if mode == "1":
+            self.player_guess = computer
+            self.guessing_role = self.COMPUTER_GUESSER
 
-        self.board = Board(self.num_slots, self.num_colors, 10)
+            self.ui.display_message("Erstelle den Code: ")
+            self.true_code = player.create_code()
+        if mode == "2":
+            self.player_guess = player
+            self.guessing_role = self.PLAYER_GUESSER
+
+            self.ui.display_message("Der Computer erstellt den Code...")
+            self.true_code = computer.create_code()
+        # TODO switch to pattern matching and add default
 
         while not self.game_over:
             self.start_round()
 
-
     def start_round(self):
-        if self.currentRound is None:
-            self.currentRound = 1
-        current_guess = input(f"Bitte gib deinen Rateversuch für Runde {self.currentRound} ab: ")
-        self.check_guess(current_guess = current_guess)
-        self.clean_up()
-        self.currentRound += 1
+        match self.guessing_role:
+            case self.PLAYER_GUESSER:
+                self.handle_player_guesser()
+            case self.COMPUTER_GUESSER:
+                self.handle_computer_guesser()
+            case _:
+                #TODO Error handling
+                pass
+    def handle_player_guesser(self):
+        self.ui.display_message(f"Bitte gib deinen Rateversuch für Runde {self.currentRound} ab: ")
 
+        current_guess = self.validate_guess()
+
+        black_pins, white_pins = self.evaluator.evaluate_guess(self.true_code, current_guess)
+        guess_with_pins = Guess(current_guess, (black_pins, white_pins))
+
+        self.board.receive_guess(self.currentRound, guess_with_pins)
+        self.clean_up()
+
+    def handle_computer_guesser(self):
+        current_guess = self.player_guess.make_guess()
+
+        black_pins, white_pins = self.evaluator.evaluate_guess(self.true_code, current_guess)
+        guess_with_pins = Guess(current_guess, (black_pins, white_pins))
+
+        self.board.receive_guess(self.currentRound, guess_with_pins)
+        self.player_guess.receive_feedback(guess_with_pins)
+
+        self.clean_up()
+
+
+    """
     def check_guess(self, current_guess):
         if len(current_guess) != self.num_slots:
             return False
@@ -99,41 +123,35 @@ class GameManager:
 
             return True
 
+    """
+
     def clean_up(self):
-        game_over = self.check_game_over()
-        if game_over != self.NONE:
-            win_message = "Der Codierer hat gewonnen!" if game_over == self.CREATOR else "Der Guesser hat gewonnen"
-            self.ui.display_message(win_message)
-            # TODO: Das Spiel beenden
-            play_again = input("Willst du nochmal spielen? (j/n): ")
-            if play_again.lower() == 'j':
-                self.start_game()
-            else:
-                self.ui.display_message("Thanks for playing!")
-                self.game_over = True
+        # TODO display Board
+
+        self.ui.display_game_state()
+
+        winner = self.check_game_over()
+
+        if winner != self.NONE:
+            win_message = "Der Codierer hat gewonnen!" if winner == self.CREATOR else "Der Guesser hat gewonnen"
+            win_message += "\n Der Farbcode war: " #TODO Farbcode anzeigen
+            self.ui.display_win_message(win_message)
+
+            self.ui.display_message("Thanks for playing!")
+            self.game_over = True
+
+        self.currentRound += 1
+
 
     def check_game_over(self):
         if self.currentRound >= self.board.get_num_rounds():
-            # CREATOR hat gewonnen
+        # CREATOR hat gewonnen
             return self.CREATOR
         else:
-            last_guess = self.board.get_guess_for_round(self.currentRound)
-            player_code = self.board.get_player_code()
+            last_guess = self.player_guess.get_latest_guess()
+            player_code = self.true_code
 
-            if last_guess.get_guess() == player_code:
-                # GUESSER hat gewonnen
+            if last_guess == player_code:
+            # GUESSER hat gewonnen
                 return self.GUESSER
         return self.NONE
-
-class IGameManager(ABC):
-    def check_guess(self, current_guess):
-        pass
-
-    def check_game_over(self):
-        pass
-
-    def start_game(self):
-        pass
-
-    def start_round(self):
-        pass
