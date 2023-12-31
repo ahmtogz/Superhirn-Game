@@ -33,13 +33,15 @@ class ConsoleMain:
                 game_manager = NetworkGameManager(ConsoleInterface(), NetworkSender(self.ip, self.port),
                                                   num_colors, board_size)
 
-                true_code = game_manager.start_game()
+                game_manager.start_game()
+
+                """
                 receiver = NetworkReceiver(self.ip, self.port, true_code)
 
                 # TODO rework logic
                 receiver.start_server()
                 game_manager.init_game()
-
+                """
     """           
     def start(self):
         while True:
