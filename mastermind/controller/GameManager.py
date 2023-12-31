@@ -34,12 +34,11 @@ class GameManager(IGameManager):
 
         self.evaluator = Evaluator()
 
-
     def start_game(self):
         self.ui.display_message("1. Kodierer, 2. Rater: ")
         mode = input()
 
-        player = Player(self.board_size)
+        player = Player(self.num_colors, self.board_size)
         computer = Computer(self.num_colors, self.board_size)
 
         if mode == "1":
@@ -47,7 +46,7 @@ class GameManager(IGameManager):
             self.guessing_role = self.COMPUTER_GUESSER
 
             self.ui.display_message("Erstelle den Code: ")
-            self.true_code = player.create_code()
+            self.true_code = self.validate_code(player)
         if mode == "2":
             self.player_guess = player
             self.guessing_role = self.PLAYER_GUESSER
@@ -66,30 +65,50 @@ class GameManager(IGameManager):
             case self.COMPUTER_GUESSER:
                 self.handle_computer_guesser()
             case _:
-                #TODO Error handling
+                # TODO Error handling
                 pass
+
     def handle_player_guesser(self):
         self.ui.display_message(f"Bitte gib deinen Rateversuch für Runde {self.currentRound} ab: ")
 
         current_guess = self.validate_guess()
+        black_pins, white_pins = self.evaluator.evaluate_guess(self.true_code, current_guess.copy())
 
-        black_pins, white_pins = self.evaluator.evaluate_guess(self.true_code, current_guess)
         guess_with_pins = Guess(current_guess, (black_pins, white_pins))
 
-        self.board.receive_guess(self.currentRound, guess_with_pins)
+        self.board.receive_guess(guess_with_pins)
         self.clean_up()
+
+    def validate_guess(self):
+        validated = False
+        current_guess = None
+
+        while not validated:
+            current_guess = self.player_guess.make_guess()
+            validated = self.validate_input(current_guess)
+
+        return current_guess
+
+    def validate_code(self, player):
+        validated = False
+        current_code = None
+
+        while not validated:
+            current_code = player.create_code()
+            validated = self.validate_input(current_code)
+
+        return current_code
 
     def handle_computer_guesser(self):
         current_guess = self.player_guess.make_guess()
 
-        black_pins, white_pins = self.evaluator.evaluate_guess(self.true_code, current_guess)
+        black_pins, white_pins = self.evaluator.evaluate_guess(self.true_code, current_guess.copy())
         guess_with_pins = Guess(current_guess, (black_pins, white_pins))
 
-        self.board.receive_guess(self.currentRound, guess_with_pins)
+        self.board.receive_guess(guess_with_pins)
         self.player_guess.receive_feedback(guess_with_pins)
 
         self.clean_up()
-
 
     """
     def check_guess(self, current_guess):
@@ -128,13 +147,13 @@ class GameManager(IGameManager):
     def clean_up(self):
         # TODO display Board
 
-        self.ui.display_game_state()
+        self.ui.display_game_state(self.board)
 
         winner = self.check_game_over()
 
         if winner != self.NONE:
-            win_message = "Der Codierer hat gewonnen!" if winner == self.CREATOR else "Der Guesser hat gewonnen"
-            win_message += "\n Der Farbcode war: " #TODO Farbcode anzeigen
+            win_message = "Der Codierer hat gewonnen!" if winner == self.CREATOR else "Der Rater hat gewonnen"
+            win_message += "\nDer Farbcode war: " + str(self.true_code)  # TODO Farbcode anzeigen
             self.ui.display_win_message(win_message)
 
             self.ui.display_message("Thanks for playing!")
@@ -142,16 +161,15 @@ class GameManager(IGameManager):
 
         self.currentRound += 1
 
-
     def check_game_over(self):
         if self.currentRound >= self.board.get_num_rounds():
-        # CREATOR hat gewonnen
+            # CREATOR hat gewonnen
             return self.CREATOR
         else:
             last_guess = self.player_guess.get_latest_guess()
             player_code = self.true_code
 
             if last_guess == player_code:
-            # GUESSER hat gewonnen
+                # GUESSER hat gewonnen
                 return self.GUESSER
         return self.NONE

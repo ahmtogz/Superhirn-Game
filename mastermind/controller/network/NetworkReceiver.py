@@ -55,7 +55,6 @@ class NetworkReceiver(INetworkReceiver):
 
         response_package = Package(game_id, package.gamer_id, package.positions, package.colors, "")
 
-        self.manager_dict[game_id] = NetworkGameManager(ConsoleInterface(), NetworkSender(self.ip, self.port))
         self.game_id += 1
 
         return response_package.to_json(), 200

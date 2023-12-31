@@ -5,12 +5,15 @@ from mastermind.controller.InputHandler import InputHandler
 
 
 class Player(IPlayer):
-
-    def __init__(self, board_size):
+    MIN_COLOR = 1
+    MAX_POSSIBLE_COLOR = 8
+    def __init__(self, num_color, board_size):
         self.handler = InputHandler()
         #self.ROLE = role
         self.board_size = board_size
         self.current_guess = [0] * board_size
+
+        self.num_color = num_color
 
     def create_code(self):
         return self.play()
@@ -31,12 +34,12 @@ class Player(IPlayer):
         return self.board_size
 
     def get_num_colors(self):
-        return self.handler.get_color()
+        return self.handler.get_color(self.MIN_COLOR, self.MAX_POSSIBLE_COLOR)  # TODO fix magic numbers
 
     def play(self):
         colors = []
         for _ in range(self.board_size):
-            colors.append(self.handler.get_color())
+            colors.append(self.handler.get_color(self.MIN_COLOR, self.num_color))  # TODO fix magic numbers
 
         return colors
     def receive_feedback(self, guess_with_pins):

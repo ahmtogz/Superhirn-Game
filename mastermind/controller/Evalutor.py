@@ -7,13 +7,16 @@ class Evaluator(IEvaluator):
         black_pins = 0
         white_pins = 0
 
-        for i in range(len(code)):
-            if code[i] == guess[i]:
+        code_copy = code.copy()
+
+        for i in range(len(code_copy)):
+            if code_copy[i] == guess[i]:
                 black_pins += 1
-                guess[i] = -1
+                code_copy[i] = -1
 
         for color in guess:
-            if color in code:
+            if color in code_copy:
+                code_copy.remove(color)
                 white_pins += 1
 
         return black_pins, white_pins

@@ -16,11 +16,13 @@ class ConsoleMain:
         print("Welcome to Superhirn")
         handler = InputHandler()
         num_rounds = 10
+        min_color = 2
+        max_color = 8
 
         game_mode = int(input("Wähle den Spielmodus: 1. Lokal, 2. Online: "))
 
         board_size = handler.get_board_size()
-        num_colors = handler.get_color()
+        num_colors = handler.get_color(min_color, max_color)
 
         match game_mode:
             case 1:

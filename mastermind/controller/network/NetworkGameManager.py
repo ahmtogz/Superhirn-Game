@@ -28,7 +28,7 @@ class NetworkGameManager(IGameManager):
         self.positions = board_size
         self.colors = num_colors
 
-        self.human_player = Player(board_size)
+        self.human_player = Player(num_colors, board_size)
 
         self.player_guess = None
 
@@ -40,6 +40,7 @@ class NetworkGameManager(IGameManager):
         self.board = None
 
         self.game_over = False
+        self.latest_result = None
 
         self.evaluator = Evaluator()
 
@@ -53,7 +54,7 @@ class NetworkGameManager(IGameManager):
         self.positions = None
         self.colors = None
 
-        self.human_player = Player(None)
+        self.human_player = None
 
         self.player_guess = None
 
@@ -62,8 +63,53 @@ class NetworkGameManager(IGameManager):
 
         self.board = None
 
+        self.latest_result = None
+
         self.game_over = False
         self.evaluator = Evaluator()
+
+    """
+    def start_game(self):
+        self.ui.display_message("1. Kodierer, 2. Rater: ")
+        mode = input()
+
+        computer = Computer(self.colors, self.positions)
+
+        if mode == "1":
+            self.player_guess = computer
+            self.guessing_role = self.COMPUTER_GUESSER
+
+            self.ui.display_message("Erstelle den Code: ")
+            self.true_code = self.human_player.create_code()
+        if mode == "2":
+            self.player_guess = self.human_player
+            self.guessing_role = self.PLAYER_GUESSER
+
+            self.ui.display_message("Der Computer erstellt den Code...")
+            self.true_code = computer.create_code()
+        # TODO switch to pattern matching and add default
+
+        return self.true_code
+    """
+
+    def start_game(self):
+        # assuming the network would always handle the code
+        self.player_guess = self.human_player
+        self.guessing_role = self.PLAYER_GUESSER
+
+        self.ui.display_message("Der Server im Netz erstellt den Code...")
+
+        self.init_game()
+
+    def start_round(self):
+        match self.guessing_role:
+            case self.PLAYER_GUESSER:
+                self.handle_player_guesser()
+            case self.COMPUTER_GUESSER:
+                self.handle_computer_guesser()
+            case _:
+                # TODO Error handling
+                pass
 
     def init_game(self):
         init_game_id = 0
@@ -92,46 +138,12 @@ class NetworkGameManager(IGameManager):
             # CREATOR hat gewonnen
             return self.CREATOR
         else:
-            last_guess = self.player_guess.get_latest_guess()
-            player_code = self.true_code
-
-            if last_guess == player_code:
-                # GUESSER hat gewonnen
-                return self.GUESSER
+            if self.latest_result is not None:
+                num_black_pins = self.latest_result.get_pins()[0]
+                if num_black_pins == self.board.board_size:
+                    # GUESSER hat gewonnen
+                    return self.GUESSER
         return self.NONE
-
-    def start_game(self):
-        self.ui.display_message("1. Kodierer, 2. Rater: ")
-        mode = input()
-
-        computer = Computer(self.colors, self.positions)
-
-        if mode == "1":
-            self.player_guess = computer
-            self.guessing_role = self.COMPUTER_GUESSER
-
-            self.ui.display_message("Erstelle den Code: ")
-            self.true_code = self.human_player.create_code()
-        if mode == "2":
-            self.player_guess = self.human_player
-            self.guessing_role = self.PLAYER_GUESSER
-
-            self.ui.display_message("Der Computer erstellt den Code...")
-            self.true_code = computer.create_code()
-        # TODO switch to pattern matching and add default
-
-        return self.true_code
-
-    def start_round(self):
-        match self.guessing_role:
-            case self.PLAYER_GUESSER:
-                self.handle_player_guesser()
-            case self.COMPUTER_GUESSER:
-                self.handle_computer_guesser()
-            case _:
-                # TODO Error handling
-                pass
-
 
     def clean_up(self):
         # TODO display Board
@@ -142,7 +154,7 @@ class NetworkGameManager(IGameManager):
 
         if winner != self.NONE:
             win_message = "Der Codierer hat gewonnen!" if winner == self.CREATOR else "Der Guesser hat gewonnen"
-            win_message += "\n Der Farbcode war: "  # TODO Farbcode anzeigen
+            # win_message += "\n Der Farbcode war: "  # TODO Farbcode anzeigen (Woher kriegt man den Farbcode über das Netzwerk?)
             self.ui.display_win_message(win_message)
 
             self.ui.display_message("Thanks for playing!")
@@ -161,7 +173,8 @@ class NetworkGameManager(IGameManager):
     def handle_computer_guesser(self):
         current_guess = self.player_guess.make_guess()
 
-        package = Package(self.game_id, self.gamer_id, self.positions, self.colors, self.parse_guess(current_guess))
+        package = Package(self.game_id, self.gamer_id, self.positions, self.colors,
+                          self.parse_guess(current_guess, True))
         self.handle_evaluation_result(self.sender.send_package(package), current_guess)  # evaluation_result
 
     def handle_evaluation_result(self, package, guess):
@@ -174,16 +187,31 @@ class NetworkGameManager(IGameManager):
             self.board.receive_guess(self.current_round, guess_with_pins)
             self.player_guess.receive_feedback(guess_with_pins)
 
+            self.latest_result = guess_with_pins
+
     def evaluate_guess(self, current_guess):
         if self.true_code is not None:
-            return self.evaluator.evaluate_guess(self.true_code, current_guess)
+            return self.evaluator.evaluate_guess(self.true_code, current_guess.copy())
         return None
 
-    def parse_guess(self, guess):
+    def validate_guess(self):
+        validated = False
+        current_guess = None
+
+        while not validated:
+            current_guess = self.player_guess.make_guess()
+            validated = self.validate_input(current_guess)
+
+        return current_guess
+
+    def parse_guess(self, guess, is_bot=False):
         parsed_guess = ""
 
         for color in guess:
-            parsed_guess += str(color)
+            if is_bot:
+                parsed_guess += str(color + 1)
+            else:
+                parsed_guess += str(color)
 
         return parsed_guess
 
