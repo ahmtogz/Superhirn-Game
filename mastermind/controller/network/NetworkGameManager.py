@@ -125,7 +125,7 @@ class NetworkGameManager(IGameManager):
         self.board = Board(positions, num_colors, self.NUM_ROUNDS)
         package = Package(init_game_id, gamer_id, positions, num_colors, "")
 
-        self.receive_init_result(self.sender.send_package(package))
+        self.receive_init_result(self.sender.send(package))
 
     def receive_init_result(self, package):
         self.game_id = package.game_id
@@ -168,14 +168,14 @@ class NetworkGameManager(IGameManager):
         current_guess = self.validate_guess()
 
         package = Package(self.game_id, self.gamer_id, self.positions, self.colors, self.parse_guess(current_guess))
-        self.handle_evaluation_result(self.sender.send_package(package), current_guess)  # evaluation_result
+        self.handle_evaluation_result(self.sender.send(package), current_guess)  # evaluation_result
 
     def handle_computer_guesser(self):
         current_guess = self.player_guess.make_guess()
 
         package = Package(self.game_id, self.gamer_id, self.positions, self.colors,
-                          self.parse_guess(current_guess, True))
-        self.handle_evaluation_result(self.sender.send_package(package), current_guess)  # evaluation_result
+                          self.parse_guess(current_guess))
+        self.handle_evaluation_result(self.sender.send(package), current_guess)  # evaluation_result
 
     def handle_evaluation_result(self, package, guess):
         unparsed_evaluation = package.value
@@ -204,14 +204,11 @@ class NetworkGameManager(IGameManager):
 
         return current_guess
 
-    def parse_guess(self, guess, is_bot=False):
+    def parse_guess(self, guess):
         parsed_guess = ""
 
         for color in guess:
-            if is_bot:
-                parsed_guess += str(color + 1)
-            else:
-                parsed_guess += str(color)
+            parsed_guess += str(color)
 
         return parsed_guess
 
