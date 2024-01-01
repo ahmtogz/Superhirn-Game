@@ -17,6 +17,18 @@ class GameManager(IGameManager):
     NONE = 4
 
     def __init__(self, ui, board_size, num_colors, num_rounds):
+        """
+        Initializes a GameManager object with the specified parameters.
+
+        Args:
+            ui: The user interface for displaying messages and game state.
+            board_size (int): The size of the game board.
+            num_colors (int): The number of colors available for each guess.
+            num_rounds (int): The total number of rounds in the game.
+
+        Returns:
+                None
+        """
         self.ui = ui
 
         self.currentRound = 1
@@ -35,6 +47,12 @@ class GameManager(IGameManager):
         self.evaluator = Evaluator()
 
     def start_game(self):
+        """
+        Starts the Mastermind game, prompting the user to choose a role and initializing players accordingly.
+
+        Returns:
+            None
+        """
         self.ui.display_message("1. Kodierer, 2. Rater: ")
         mode = input()
 
@@ -59,6 +77,12 @@ class GameManager(IGameManager):
             self.start_round()
 
     def start_round(self):
+        """
+        Starts a new round in the Mastermind game, handling the turn based on the current role.
+
+        Returns:
+                None
+        """
         match self.guessing_role:
             case self.PLAYER_GUESSER:
                 self.handle_player_guesser()
@@ -69,6 +93,12 @@ class GameManager(IGameManager):
                 pass
 
     def handle_player_guesser(self):
+        """
+        Handles the turn when the player is the guesser.
+
+        Returns:
+            None
+        """
         self.ui.display_message(f"Bitte gib deinen Rateversuch für Runde {self.currentRound} ab: ")
 
         current_guess = self.validate_guess()
@@ -80,6 +110,12 @@ class GameManager(IGameManager):
         self.clean_up()
 
     def validate_guess(self):
+        """
+        Validates the player's guess for correctness.
+
+        Returns:
+            list: The validated guess made by the player.
+        """
         validated = False
         current_guess = None
 
@@ -90,6 +126,15 @@ class GameManager(IGameManager):
         return current_guess
 
     def validate_code(self, player):
+        """
+        Validates the player's secret code for correctness.
+
+        Args:
+            player: The player object creating the secret code.
+
+        Returns:
+            list: The validated secret code created by the player.
+        """
         validated = False
         current_code = None
 
@@ -100,6 +145,12 @@ class GameManager(IGameManager):
         return current_code
 
     def handle_computer_guesser(self):
+        """
+        Handles the turn when the computer is the guesser.
+
+        Returns:
+            None
+        """
         current_guess = self.player_guess.make_guess()
 
         black_pins, white_pins = self.evaluator.evaluate_guess(self.true_code, current_guess.copy())
@@ -145,6 +196,12 @@ class GameManager(IGameManager):
     """
 
     def clean_up(self):
+        """
+        Cleans up after a turn, displaying the game state and checking if the game is over.
+
+        Returns:
+            None
+        """
         # TODO display Board
 
         self.ui.display_game_state(self.board)
@@ -162,6 +219,12 @@ class GameManager(IGameManager):
         self.currentRound += 1
 
     def check_game_over(self):
+        """
+        Checks if the game is over based on the current round and the correctness of the last guess.
+
+        Returns:
+            int: The winner identifier (CREATOR, GUESSER, NONE).
+        """
         if self.currentRound >= self.board.get_num_rounds():
             # CREATOR hat gewonnen
             return self.CREATOR

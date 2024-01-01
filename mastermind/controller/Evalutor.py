@@ -4,6 +4,16 @@ from mastermind.model.Guess import Guess
 
 class Evaluator(IEvaluator):
     def evaluate_guess(self, code, guess):
+        """
+        Evaluates a guess by comparing it to the secret code and counting black and white pins.
+
+        Args:
+            code (list): The secret code to be guessed.
+            guess (list): The guess made by the player.
+
+        Returns:
+            tuple: A tuple containing the number of black and white pins.
+        """
         black_pins = 0
         white_pins = 0
 

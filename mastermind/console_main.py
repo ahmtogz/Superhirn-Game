@@ -13,6 +13,7 @@ class ConsoleMain:
         self.port = 5000
 
     def start_game(self):
+        """Starts the Superhirn Mastermind game."""
         print("Welcome to Superhirn")
         handler = InputHandler()
         num_rounds = 10
@@ -44,6 +45,7 @@ class ConsoleMain:
                 """
     """           
     def start(self):
+    
         while True:
             try:
                 mode = int(input("Wähle einen Spielmodus (1 Lokales Spiel vs. Computer, 2 Internetspiel vs. Mensch): "))
@@ -86,6 +88,7 @@ class ConsoleMain:
 
 
 def main():
+    """The entry point of the Superhirn console application."""
     console_main = ConsoleMain()
     console_main.start_game()
 

@@ -4,6 +4,15 @@ from abc import ABC, abstractmethod
 class IGameManager(ABC):
 
     def validate_input(self, current_input):
+        """
+        Validates the input for correctness.
+
+        Args:
+            current_input (list): The current input to be validated.
+
+        Returns:
+            bool: True if the input is in the correct format, False otherwise.
+        """
 
         correct_format = True
 

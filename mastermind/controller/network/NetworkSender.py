@@ -8,12 +8,31 @@ from mastermind.controller.network.Package import Package
 class NetworkSender(INetworkSender):
 
     def __init__(self, ip, port):
+        """
+        Initializes a NetworkSender object with the specified IP address and port.
+
+        Args:
+            ip (str): The IP address for the network communication.
+            port (int): The port for the network communication.
+
+        Returns:
+            None
+        """
         self.ip = ip
         self.port = port
 
         self.url = "http://" + self.ip + ":" + str(self.port)
 
     def send(self, package):
+        """
+        Sends a network request with the provided package.
+
+        Args:
+            package (Package): The package to be sent.
+
+        Returns:
+            Package: The response package received from the network.
+        """
         package_json = package.to_json()
         headers = {'Content-Type': 'application/json'}
 

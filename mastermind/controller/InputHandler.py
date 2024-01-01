@@ -1,6 +1,16 @@
 class InputHandler:
+    """A class responsible for handling user input in the Mastermind game."""
     def get_color(self, min_color, max_color):
-    
+        """
+        Gets a color input from the user within a specified range.
+
+        Args:
+            min_color (int): The minimum allowed color value.
+            max_color (int): The maximum allowed color value.
+
+        Returns:
+            int: The selected color input from the user.
+        """
         while True:
             try:
                 color_input = int(input(
@@ -14,6 +24,12 @@ class InputHandler:
                 print("Ungültige Eingabe. Bitte eine Zahl eingeben.")
 
     def get_gamer_id(self):
+        """
+        Gets a gamer ID input from the user.
+
+        Returns:
+            str: The gamer ID input from the user.
+        """
         while True:
             gamer_id_input = str(input("Bitte geben sie ihren Gamer Tag an: "))
             if gamer_id_input is not None and len(gamer_id_input) > 0:
@@ -22,6 +38,12 @@ class InputHandler:
                 print("Ungültige Eingabe. Bitte geben sie einen nicht leeren Gamer Tag an")
 
     def get_board_size(self):
+        """
+        Gets the board size input from the user within a specified range.
+
+        Returns:
+            int: The selected board size input from the user.
+        """
         min_size = 4
         max_size = 5
 
