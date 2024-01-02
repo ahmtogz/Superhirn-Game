@@ -1,13 +1,8 @@
-import json
-
 from mastermind.controller.Evalutor import Evaluator
 from mastermind.controller.network.INetworkReceiver import INetworkReceiver
-from flask import app, Flask, request, jsonify
+from flask import Flask, request
 
-from mastermind.controller.network.NetworkGameManager import NetworkGameManager
-from mastermind.controller.network.NetworkSender import NetworkSender
 from mastermind.controller.network.Package import Package
-from mastermind.view.ConsolteInterface import ConsoleInterface
 
 
 class NetworkReceiver(INetworkReceiver):
@@ -32,7 +27,6 @@ class NetworkReceiver(INetworkReceiver):
         self.ip = ip
         self.port = port
 
-
         self.url = "http://" + self.ip + ":" + str(self.port)
         self.app = Flask(__name__)
 
@@ -51,7 +45,7 @@ class NetworkReceiver(INetworkReceiver):
 
         parsed_guess = self.parse_request_guess(package.value)
 
-        evaluation = self.evaluator.evaluate_guess(self.true_code, parsed_guess)
+        evaluation = list(self.evaluator.evaluate_guess(self.true_code, parsed_guess))
 
         if evaluation is not None:
             response_package = Package(package.game_id, package.gamer_id,

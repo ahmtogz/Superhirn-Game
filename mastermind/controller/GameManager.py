@@ -1,5 +1,3 @@
-from abc import ABC, abstractmethod
-
 from mastermind.controller.Computer import Computer
 from mastermind.controller.Evalutor import Evaluator
 from mastermind.controller.IGameManager import IGameManager
@@ -16,7 +14,7 @@ class GameManager(IGameManager):
     GUESSER = 3
     NONE = 4
 
-    def __init__(self, ui, board_size, num_colors, num_rounds):
+    def __init__(self, ui, board_size, num_colors, num_rounds, player_role):
         """
         Initializes a GameManager object with the specified parameters.
 
@@ -25,6 +23,7 @@ class GameManager(IGameManager):
             board_size (int): The size of the game board.
             num_colors (int): The number of colors available for each guess.
             num_rounds (int): The total number of rounds in the game.
+            player_role (int): The role the player chose to play as.
 
         Returns:
                 None
@@ -41,6 +40,7 @@ class GameManager(IGameManager):
 
         self.num_colors = num_colors
         self.board_size = board_size
+        self.player_role = player_role
         self.game_over = False
         self.true_code = None
 
@@ -53,25 +53,24 @@ class GameManager(IGameManager):
         Returns:
             None
         """
-        self.ui.display_message("1. Kodierer, 2. Rater: ")
-        mode = input()
-
         player = Player(self.num_colors, self.board_size)
         computer = Computer(self.num_colors, self.board_size)
 
-        if mode == "1":
+        if self.player_role == 1:
             self.player_guess = computer
             self.guessing_role = self.COMPUTER_GUESSER
 
             self.ui.display_message("Erstelle den Code: ")
             self.true_code = self.validate_code(player)
-        if mode == "2":
+        elif self.player_role == 2:
             self.player_guess = player
             self.guessing_role = self.PLAYER_GUESSER
 
             self.ui.display_message("Der Computer erstellt den Code...")
             self.true_code = computer.create_code()
-        # TODO switch to pattern matching and add default
+        else:
+            self.ui.display_win_message("Etwas ist beim Setup-Prozess schief gelaufen. Spiel wird geschlossen.")
+            exit()
 
         while not self.game_over:
             self.start_round()
@@ -89,8 +88,8 @@ class GameManager(IGameManager):
             case self.COMPUTER_GUESSER:
                 self.handle_computer_guesser()
             case _:
-                # TODO Error handling
-                pass
+                self.ui.display_win_message("Etwas ist beim Setup-Prozess schief gelaufen. Spiel wird geschlossen.")
+                exit()
 
     def handle_player_guesser(self):
         """
@@ -144,6 +143,27 @@ class GameManager(IGameManager):
 
         return current_code
 
+    def validate_input(self, current_input):
+        """
+        Validates the input for correctness.
+
+        Args:
+            current_input (list): The current input to be validated.
+
+        Returns:
+            bool: True if the input is in the correct format, False otherwise.
+        """
+
+        correct_format = True
+
+        for color in current_input:
+            if not 1 <= color <= self.num_colors:
+                self.ui.display_message(f"Ungültige Eingabe. Geben sie den Code erneut ein: ")
+                correct_format = False
+                break
+
+        return correct_format
+
     def handle_computer_guesser(self):
         """
         Handles the turn when the computer is the guesser.
@@ -161,40 +181,6 @@ class GameManager(IGameManager):
 
         self.clean_up()
 
-    """
-    def check_guess(self, current_guess):
-        if len(current_guess) != self.num_slots:
-            return False
-        elif not current_guess.isdigit():
-            return False
-        elif any(int(digit) >= self.num_colors for digit in current_guess):
-            return False
-        else:
-            correct_num_guesses = 0
-            correct_num_colors = 0
-
-            true_code_array = [int(digit) for digit in self.true_code]
-            current_guess_array = [int(digit) for digit in current_guess]
-
-            for i in range(len(true_code_array)):
-                if true_code_array[i] == current_guess_array[i]:
-                    correct_num_guesses += 1
-                    true_code_array[i] = -1
-
-            # Check for correct colors (correct_num_colors)
-            for digit in true_code_array:
-                if digit != -1 and digit in current_guess_array:
-                    correct_num_colors += 1
-                    current_guess_array.remove(digit)
-
-            # Display results
-            self.ui.display_message(f"Anzahl richtiger Farben an korrekter Position: {correct_num_guesses}")
-            self.ui.display_message(f"Anzahl richtiger Farben an falscher Position: {correct_num_colors}")
-
-            return True
-
-    """
-
     def clean_up(self):
         """
         Cleans up after a turn, displaying the game state and checking if the game is over.
@@ -202,18 +188,16 @@ class GameManager(IGameManager):
         Returns:
             None
         """
-        # TODO display Board
-
         self.ui.display_game_state(self.board)
 
         winner = self.check_game_over()
 
         if winner != self.NONE:
-            win_message = "Der Codierer hat gewonnen!" if winner == self.CREATOR else "Der Rater hat gewonnen"
-            win_message += "\nDer Farbcode war: " + str(self.true_code)  # TODO Farbcode anzeigen
+            win_message = "Der Codierer hat gewonnen!" if winner == self.CREATOR else "Der Rater hat gewonnen!"
+            win_message += "\nDer Farbcode war: " + str(self.true_code)
             self.ui.display_win_message(win_message)
 
-            self.ui.display_message("Thanks for playing!")
+            self.ui.display_message("Danke für's Spielen!")
             self.game_over = True
 
         self.currentRound += 1
@@ -225,14 +209,11 @@ class GameManager(IGameManager):
         Returns:
             int: The winner identifier (CREATOR, GUESSER, NONE).
         """
-        if self.currentRound >= self.board.get_num_rounds():
-            # CREATOR hat gewonnen
+        last_guess = self.player_guess.get_latest_guess()
+        player_code = self.true_code
+        if last_guess == player_code:
+            return self.GUESSER
+        elif self.currentRound >= self.board.get_num_rounds():
             return self.CREATOR
         else:
-            last_guess = self.player_guess.get_latest_guess()
-            player_code = self.true_code
-
-            if last_guess == player_code:
-                # GUESSER hat gewonnen
-                return self.GUESSER
-        return self.NONE
+            return self.NONE

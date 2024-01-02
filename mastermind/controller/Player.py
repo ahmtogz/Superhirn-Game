@@ -1,13 +1,11 @@
-from random import random
-
 from mastermind.controller.IPlayer import IPlayer
 from mastermind.controller.InputHandler import InputHandler
 
 
 class Player(IPlayer):
-
     MIN_COLOR = 1
     MAX_POSSIBLE_COLOR = 8
+
     def __init__(self, num_color, board_size):
         """
         Initializes a Player object with the specified number of colors and board size.
@@ -20,7 +18,6 @@ class Player(IPlayer):
             None
         """
         self.handler = InputHandler()
-        #self.ROLE = role
         self.board_size = board_size
         self.current_guess = [0] * board_size
 
@@ -34,9 +31,6 @@ class Player(IPlayer):
             list: The secret code created by the player.
         """
         return self.play()
-
-        #return [random.randint(1, 8) for _ in range(self.board_size)]
-        # return [0] * self.board_size
 
     def make_guess(self):
         """
@@ -75,22 +69,23 @@ class Player(IPlayer):
         Returns:
             int: The number of colors selected by the player.
         """
-        return self.handler.get_color(self.MIN_COLOR, self.MAX_POSSIBLE_COLOR)  # TODO fix magic numbers
+        return self.handler.get_color(self.MIN_COLOR, self.MAX_POSSIBLE_COLOR)
 
     def play(self):
         """
-        Simulates the player's turn, getting a sequence of colors as a guess.
+        Acquires a sequence of colors as a guess from the player input.
 
         Returns:
             list: A list representing the guess made by the player.
         """
         colors = []
         for _ in range(self.board_size):
-            colors.append(self.handler.get_color(self.MIN_COLOR, self.num_color))  # TODO fix magic numbers
+            colors.append(self.handler.get_color(self.MIN_COLOR, self.num_color))
 
         return colors
+
     def receive_feedback(self, guess_with_pins):
-        #no-op
+        # no-op
         pass
 
     def get_latest_guess(self):

@@ -1,6 +1,3 @@
-from random import randrange
-
-from mastermind.controller.Computer import Computer
 from mastermind.controller.Evalutor import Evaluator
 from mastermind.controller.IGameManager import IGameManager
 from mastermind.controller.Player import Player
@@ -44,54 +41,6 @@ class NetworkGameManager(IGameManager):
 
         self.evaluator = Evaluator()
 
-    def __init__(self, ui, sender):
-        self.ui = ui
-        self.sender = sender
-
-        self.ui = ui
-        self.game_id = None
-        self.gamer_id = None
-        self.positions = None
-        self.colors = None
-
-        self.human_player = None
-
-        self.player_guess = None
-
-        self.guessing_role = None
-        self.true_code = None
-
-        self.board = None
-
-        self.latest_result = None
-
-        self.game_over = False
-        self.evaluator = Evaluator()
-
-    """
-    def start_game(self):
-        self.ui.display_message("1. Kodierer, 2. Rater: ")
-        mode = input()
-
-        computer = Computer(self.colors, self.positions)
-
-        if mode == "1":
-            self.player_guess = computer
-            self.guessing_role = self.COMPUTER_GUESSER
-
-            self.ui.display_message("Erstelle den Code: ")
-            self.true_code = self.human_player.create_code()
-        if mode == "2":
-            self.player_guess = self.human_player
-            self.guessing_role = self.PLAYER_GUESSER
-
-            self.ui.display_message("Der Computer erstellt den Code...")
-            self.true_code = computer.create_code()
-        # TODO switch to pattern matching and add default
-
-        return self.true_code
-    """
-
     def start_game(self):
         # assuming the network would always handle the code
         self.player_guess = self.human_player
@@ -108,22 +57,16 @@ class NetworkGameManager(IGameManager):
             case self.COMPUTER_GUESSER:
                 self.handle_computer_guesser()
             case _:
-                # TODO Error handling
-                pass
+                self.ui.display_win_message("Etwas ist beim Setup-Prozess schief gelaufen. Spiel wird geschlossen.")
+                exit()
 
     def init_game(self):
         init_game_id = 0
         gamer_id = self.human_player.create_gamer_id()
         self.gamer_id = gamer_id
 
-        positions = self.human_player.create_board_size()
-        self.positions = positions
-
-        num_colors = self.human_player.get_num_colors()
-        self.colors = num_colors
-
-        self.board = Board(positions, num_colors, self.NUM_ROUNDS)
-        package = Package(init_game_id, gamer_id, positions, num_colors, "")
+        self.board = Board(self.positions, self.colors, self.NUM_ROUNDS)
+        package = Package(init_game_id, self.gamer_id, self.positions, self.colors, "")
 
         self.receive_init_result(self.sender.send(package))
 
@@ -135,26 +78,22 @@ class NetworkGameManager(IGameManager):
 
     def check_game_over(self):
         if self.current_round >= self.board.get_num_rounds():
-            # CREATOR hat gewonnen
             return self.CREATOR
         else:
             if self.latest_result is not None:
                 num_black_pins = self.latest_result.get_pins()[0]
                 if num_black_pins == self.board.board_size:
-                    # GUESSER hat gewonnen
                     return self.GUESSER
         return self.NONE
 
     def clean_up(self):
-        # TODO display Board
-
         self.ui.display_game_state()
 
         winner = self.check_game_over()
 
         if winner != self.NONE:
             win_message = "Der Codierer hat gewonnen!" if winner == self.CREATOR else "Der Guesser hat gewonnen"
-            # win_message += "\n Der Farbcode war: "  # TODO Farbcode anzeigen (Woher kriegt man den Farbcode über das Netzwerk?)
+            # win_message += "\n Der Farbcode war: "  # TODO Farbcode anzeigen (Woher kriegt man den Farbcode?)
             self.ui.display_win_message(win_message)
 
             self.ui.display_message("Thanks for playing!")
@@ -203,6 +142,27 @@ class NetworkGameManager(IGameManager):
             validated = self.validate_input(current_guess)
 
         return current_guess
+
+    def validate_input(self, current_input):
+        """
+        Validates the input for correctness.
+
+        Args:
+            current_input (list): The current input to be validated.
+
+        Returns:
+            bool: True if the input is in the correct format, False otherwise.
+        """
+
+        correct_format = True
+
+        for color in current_input:
+            if not 1 <= color <= self.colors:
+                self.ui.display_message(f"Ungültige Eingabe. Geben sie den Code erneut ein: ")
+                correct_format = False
+                break
+
+        return correct_format
 
     def parse_guess(self, guess):
         parsed_guess = ""

@@ -7,11 +7,14 @@ class Package:
         Initializes a Package object with the specified attributes.
 
         Args:
-            game_id (int): The Id of a certain game. 0 if you want to start a new game.
-            gamer_id (str): The Id (String) of the gamer. Freely selectable at the beginning of the game.
-            positions (int): How many positions (>=1, <=9) does the pattern to be guessed have?. Selectable at the beginning of the game.
-            colors (int): What is the maximum number of different colors (>=1, <=8) in the pattern to be guessed?. Selectable at the beginning of the game.
-            value (str): Either the attempt to be evaluated (request to the server) or the evaluation (response from the server). Empty String at game start.
+            game_id (int): The ID of a certain game. 0 if you want to start a new game.
+            gamer_id (str): The ID (String) of the gamer. Freely selectable at the beginning of the game.
+            positions (int): How many positions (>=1, <=9) does the pattern to be guessed have?. Selectable at the
+            beginning of the game.
+            colors (int): What is the maximum number of different colors (>=1, <=8) in the pattern to be guessed?.
+            Selectable at the beginning of the game.
+            value (str): Either the attempt to be evaluated (request to the server) or the evaluation (response from the
+            server). Empty String at game start.
 
         Returns:
             None

@@ -33,8 +33,9 @@ class Computer(IPlayer):
         Returns:
             list: The secret code created by the computer player.
         """
-        code = random.sample(range(1, self.num_colors + 1), self.board_size)
-        random.shuffle(code)
+        code = []
+        for _ in range(self.board_size):
+            code.append(random.randint(1, self.num_colors))
         return code
 
     def get_random_guess(self):

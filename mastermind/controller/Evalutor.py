@@ -1,5 +1,4 @@
 from mastermind.controller.IEvaluator import IEvaluator
-from mastermind.model.Guess import Guess
 
 
 class Evaluator(IEvaluator):
@@ -23,6 +22,7 @@ class Evaluator(IEvaluator):
             if code_copy[i] == guess[i]:
                 black_pins += 1
                 code_copy[i] = -1
+                guess[i] = -2
 
         for color in guess:
             if color in code_copy:
@@ -30,6 +30,3 @@ class Evaluator(IEvaluator):
                 white_pins += 1
 
         return black_pins, white_pins
-
-
-
