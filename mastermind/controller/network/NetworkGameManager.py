@@ -1,4 +1,4 @@
-from mastermind.controller.Evalutor import Evaluator
+from mastermind.controller.Evaluator import Evaluator
 from mastermind.controller.IGameManager import IGameManager
 from mastermind.controller.Player import Player
 from mastermind.controller.network.Package import Package

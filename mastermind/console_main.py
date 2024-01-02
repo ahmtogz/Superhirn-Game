@@ -4,7 +4,7 @@ from mastermind.controller.GameManager import GameManager
 from mastermind.controller.InputHandler import InputHandler
 from mastermind.controller.network.NetworkGameManager import NetworkGameManager
 from mastermind.controller.network.NetworkSender import NetworkSender
-from mastermind.view.ConsolteInterface import ConsoleInterface
+from mastermind.view.ConsoleInterface import ConsoleInterface
 import socket
 
 

@@ -2,7 +2,7 @@ import itertools
 import random
 from typing import List
 
-from mastermind.controller.Evalutor import Evaluator
+from mastermind.controller.Evaluator import Evaluator
 from mastermind.controller.IPlayer import IPlayer
 
 

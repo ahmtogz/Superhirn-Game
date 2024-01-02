@@ -1,4 +1,4 @@
-from mastermind.controller.Evalutor import Evaluator
+from mastermind.controller.Evaluator import Evaluator
 from mastermind.controller.network.INetworkReceiver import INetworkReceiver
 from flask import Flask, request
 
