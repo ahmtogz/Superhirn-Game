@@ -1,3 +1,5 @@
+import art
+
 from mastermind.controller.GameManager import GameManager
 from mastermind.controller.InputHandler import InputHandler
 from mastermind.controller.network.NetworkGameManager import NetworkGameManager
@@ -14,7 +16,6 @@ class ConsoleMain:
 
     def start_game(self):
         """Starts the Superhirn Mastermind game."""
-        print("Wilkommen bei Superhirn!")
         handler = InputHandler()
         num_rounds = 10
         min_color = 2
@@ -38,11 +39,27 @@ class ConsoleMain:
 
                 game_manager.start_game()
 
+    def play(self):
+        while True:
+            art.tprint("Wilkommen bei Superhirn!")
+            print("\n----- Menü -----")
+            print("1. Spiel starten")
+            print("0. Spiel beenden")
+            print("")
+            choice = input("Wähle eine Option: ")
+
+            if choice == "1":
+                self.start_game()
+            elif choice == "0":
+                print("Spiel beendet. Auf Wiedersehen!")
+                break
+            else:
+                print("Ungültige Eingabe. Bitte wähle eine gültige Option.")
 
 def main():
     """The entry point of the Superhirn console application."""
     console_main = ConsoleMain()
-    console_main.start_game()
+    console_main.play()
 
 
 if __name__ == "__main__":
